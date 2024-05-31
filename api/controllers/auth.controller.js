@@ -48,3 +48,43 @@ export const signin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const google = async (req, res, next) => {
+  const { email, name, googlePhotoUrl } = req.body;
+  try {
+    const userExist = await User.findOne({ email });
+    if (userExist) {
+      const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET_KEY);
+      const { password: pass, ...rest } = validUser._doc;
+      res
+        .cookie("access_token", token, { httpOnly: true })
+        .status(200)
+        .json(rest);
+    } else {
+      const password =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const newUser = new User({
+        username: name
+          .toLowerCase()
+          .split(" ")
+          .join("")
+          .Math.random()
+          .slice(-4),
+        email,
+        password: hashedPassword,
+        profilePicture: googlePhotoUrl,
+      });
+      await newUser.save();
+      const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY);
+      const { password: pass, ...rest } = newUser._doc;
+      res
+        .cookie("access_token", token, { httpOnly: true })
+        .status(200)
+        .json(rest);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
