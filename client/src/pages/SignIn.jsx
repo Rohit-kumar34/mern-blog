@@ -1,11 +1,19 @@
 import { Button, Label, Spinner, TextInput } from "flowbite-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "../redux/user/userSlice.js";
+
+import { useSelector, useDispatch } from "react-redux";
 
 const SignIn = () => {
   const [formdata, setFormData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  const { error, loading } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
@@ -15,7 +23,7 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    dispatch(signInStart());
     try {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
@@ -25,20 +33,16 @@ const SignIn = () => {
         body: JSON.stringify(formdata),
       });
       const data = await res.json();
-      console.log(data);
       if (data.success === false) {
-        setLoading(false);
-        setError(data.message);
+        dispatch(signInFailure(data.message));
         return;
       }
-      setLoading(false);
-      setError(null);
+      dispatch(signInSuccess(data));
       if (res.ok) {
         navigate("/");
       }
     } catch (error) {
-      setLoading(false);
-      setError(error.message);
+      dispatch(signInFailure(error.message));
     }
   };
 
